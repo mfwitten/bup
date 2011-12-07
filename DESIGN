@@ -378,8 +378,8 @@ Detailed Metadata
 
 Git repositories are really only intended to store file contents
 with a small bit of extra information, like symlink support and
-differentiating between executable and non-executable files.  For the rest,
-we'll have to store it some other way.
+differentiation between executable and non-executable files. It is
+necessary to store any other metadata in some other way.
 
 As of this writing, bup's support for metadata is... pretty much
 nonexistent.  People are working on it.  But the plan goes like this:
