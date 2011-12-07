@@ -127,7 +127,7 @@ stolen from rsync and xdelta, although we use it differently.  And they use
 some kind of variable window size based on a formula we don't totally
 understand.)
 
-The original rolling checksum algorithm we used was called "stupidsum,"
+The original rolling checksum algorithm we used was called "stupidsum",
 because it was based on the only checksum Avery remembered how to calculate at
 the time.  He also remembered that it was the introductory checksum
 algorithm in a whole article about how to make good checksums that he read
@@ -158,7 +158,7 @@ wrong.)
 (Incidentally, even though the average chunk size is 8192 bytes, the actual
 probability distribution of block sizes ends up being non-uniform; if we
 remember our stats classes correctly, which we probably don't, it's probably
-an "exponential distribution."  The idea is that for each byte in the block,
+an "exponential distribution".  The idea is that for each byte in the block,
 the probability that it's the last block is one in 8192.  Thus, the
 block sizes end up being skewed toward the smaller end.  That's not
 necessarily for the best, but maybe it is.  Computer science to the rescue?
@@ -211,7 +211,7 @@ fact that we want you to be able to 'git checkout' your data without any
 special tools.
 
 What we do instead is we extend the hashsplit algorithm a little further
-using what we call "fanout." Instead of checking just the last 13 bits of
+using what we call "fanout". Instead of checking just the last 13 bits of
 the checksum, we use additional checksum bits to produce additional splits.
 For example, let's say we use a 4-bit fanout.  That means we'll break a
 series of chunks into its own tree object whenever the last 13+4 = 17 bits
@@ -253,7 +253,7 @@ can handle.  But that's not the same kind of "frequently" we're talking
 about.  Imagine you're backing up all the files on your disk, and one of
 those files is a 100 GB database file with hundreds of daily users.  You
 disk changes so frequently you can't even back up all the revisions even if
-you were backing stuff up 24 hours a day.  That's "frequently.")
+you were backing stuff up 24 hours a day.  That's "frequently".)
 
 git's way of doing things works really nicely for the way software
 developers write software, but it doesn't really work so well for everything
@@ -413,7 +413,7 @@ can do better.
 Backing up with tarballs would totally be the way to go, except for two
 serious problems:
 
-1. The result isn't easily "seekable."  Tar files have no index, so if (as
+1. The result isn't easily "seekable".  Tar files have no index, so if (as
    commonly happens) you only want to restore one file in a 200 GB backup,
    you'll have to read up to 200 GB before you can get to the beginning of
    that file.  tar is short for "tape archive"; on a tape, there was no
@@ -475,7 +475,7 @@ concerned, your bup repository is a "bare" git repository and doesn't have a
 working tree, and thus it doesn't have an index either.
 
 However, the bupindex file actually serves exactly the same purpose as git's
-index file, which is why we still call it "the index." We just had to
+index file, which is why we still call it "the index". We just had to
 redesign it for the usual bup-vs-git reasons, mostly that git just isn't
 designed to handle millions of files in a single repository.  (The only way
 to find a file in git's index is to search it linearly; that's very fast in
@@ -512,8 +512,8 @@ A note on file "dirtiness"
 --------------------------
 
 The concept on which 'bup save' operates is simple enough; it reads through
-the index and backs up any file that is "dirty," that is, doesn't already
-exist in the repository.
+the index and backs up any file that is "dirty" (it doesn't already
+exist in the repository).
 
 Determination of dirtiness is a little more complicated than it sounds.  The
 most dirtiness-relevant relevant flag in the bupindex is IX_HASHVALID; if
