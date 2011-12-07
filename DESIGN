@@ -433,7 +433,8 @@ serious problems:
 GNU tar has an "incremental" mode that can somewhat mitigate this problem,
 if you're smart enough to know how to use it without hurting yourself.  But
 you still have to decide which backups are "incremental" and which ones will
-be "full" and so on, so even when it works, it's more error-prone than bup.)
+be "full" and so on, so even when it works, it's more error-prone than
+it needs to be.)
 
 Bup divides the backup process into two major steps:
 
