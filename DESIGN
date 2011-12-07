@@ -161,7 +161,7 @@ chunk sizes end up being skewed toward the smaller end.  That's not
 necessarily for the best, but maybe it is.  Computer science to the rescue?
 You know the drill.)
 
-Anyway, so we're dividing up those files into chunks based on the rolling
+Anyway, so we're dividing up each [big] file into chunks based on the rolling
 checksum.  Then we store each chunk separately (indexed by its sha1sum) as a
 git blob.  Why do we split this way?  Well, because the results are actually
 really nice.  Let's imagine you have a big mysql database dump (produced by
