@@ -15,20 +15,20 @@ Bup Source Code Layout
 
 As you're reading this, you might want to look at different parts of the bup
 source code to follow along and see what we're talking about.  bup's code is
-written primarily in python with a bit of C code in speed-sensitive places. 
+written primarily in python with a bit of C code in speed-sensitive places.
 Here are the most important things to know:
 
  - bup (symlinked to main.py) is the main program that runs when you type
    'bup'.
- 
+
  - cmd/bup-* (mostly symlinked to cmd/*-cmd.py) are the individual
    subcommands, in a way similar to how git breaks all its subcommands into
    separate programs.  Not all the programs have to be written in python;
-   they could be in any language, as long as they end up named cmd/bup-*. 
+   they could be in any language, as long as they end up named cmd/bup-*.
    We might end up re-coding large parts of bup in C eventually so that it
    can be even faster and (perhaps) more portable.
 
- - lib/bup/*.py are python library files used by the cmd/*.py commands. 
+ - lib/bup/*.py are python library files used by the cmd/*.py commands.
    That directory name seems a little silly (and worse, redundant) but there
    seemed to be no better way to let programs write "from bup import
    index" and have it work.  Putting bup in the top level conflicted with
@@ -64,10 +64,10 @@ half a page telling you that bup backs up and restores data.  Are we having
 fun yet?
 
 The next thing you'll want to know is the format of the bup repository,
-because hacking on bup is rather impossible unless you understand that part. 
+because hacking on bup is rather impossible unless you understand that part.
 In short, a bup repository is a git repository.  If you don't know about
 git, you'll want to read about it now.  A really good article to read is
-"Git for Computer Scientists" - you can find it in Google.  Go read it now. 
+"Git for Computer Scientists" - you can find it in Google.  Go read it now.
 We'll wait.
 
 Got it?  Okay, so now you're an expert in blobs, trees, commits, and refs,
@@ -113,14 +113,14 @@ the original versions of bup could only store a single file at a time;
 surprisingly enough, this was enough to give us a large part of bup's
 functionality.  If you just take your entire filesystem and put it in a
 giant tarball each day, then send that tarball to bup, bup will be able to
-efficiently store only the changes to that tarball from one day to the next. 
+efficiently store only the changes to that tarball from one day to the next.
 For small files, bup's compression won't be as good as xdelta's, but for
 anything over a few megabytes in size, bup's compression will actually
 *work*, which is a bit advantage over xdelta.
 
 How does hashsplitting work?  It's deceptively simple.  We read through the
 file one byte at a time, calculating a rolling checksum of the last 128
-bytes.  (Why 128?  No reason.  Literally.  We picked it out of the air. 
+bytes.  (Why 128?  No reason.  Literally.  We picked it out of the air.
 Probably some other number is better.  Feel free to join the mailing list
 and tell us which one and why.)  (The rolling checksum idea is actually
 stolen from rsync and xdelta, although we use it differently.  And they use
@@ -141,10 +141,10 @@ rsync does, except we use a fixed window size.
 
 (If you're a computer scientist and can demonstrate that some other rolling
 checksum would be faster and/or better and/or have fewer screwy edge cases,
-we need your help!  Avery's out of control!  Join our mailing list!  Please! 
+we need your help!  Avery's out of control!  Join our mailing list!  Please!
 Save us! ...  oh boy, I sure hope he doesn't read this)
 
-In any case, rollsum seems to do pretty well at its job. 
+In any case, rollsum seems to do pretty well at its job.
 You can find it in bupsplit.c.  Basically, it converts the last 128 bytes
 read into a 32-bit integer.  What we then do is take the lowest 13
 bits of the rollsum, and if they're all 1's, we consider that to be the end
@@ -161,7 +161,7 @@ remember our stats classes correctly, which we probably don't, it's probably
 an "exponential distribution."  The idea is that for each byte in the block,
 the probability that it's the last block is one in 8192.  Thus, the
 block sizes end up being skewed toward the smaller end.  That's not
-necessarily for the best, but maybe it is.  Computer science to the rescue? 
+necessarily for the best, but maybe it is.  Computer science to the rescue?
 You know the drill.)
 
 Anyway, so we're dividing up those files into chunks based on the rolling
@@ -212,7 +212,7 @@ special tools.
 
 What we do instead is we extend the hashsplit algorithm a little further
 using what we call "fanout." Instead of checking just the last 13 bits of
-the checksum, we use additional checksum bits to produce additional splits. 
+the checksum, we use additional checksum bits to produce additional splits.
 For example, let's say we use a 4-bit fanout.  That means we'll break a
 series of chunks into its own tree object whenever the last 13+4 = 17 bits
 of the rolling checksum are 1.  Naturally, whenever the lowest 17 bits are
@@ -224,7 +224,7 @@ them into supergroups by using another 4 bits, and continue from there.
 
 What you end up with is an actual tree of blobs - which git 'tree' objects
 are ideal to represent.  And if you think about it, just like the original
-list of chunks, the tree itself is pretty stable across file modifications. 
+list of chunks, the tree itself is pretty stable across file modifications.
 Any one modification will only affect the chunks actually containing the
 modifications, thus only the groups containing those chunks, and so on up
 the tree.  Essentially, the number of changed git objects is O(log n)
@@ -381,22 +381,22 @@ As of this writing, bup's support for metadata is... pretty much
 nonexistent.  People are working on it.  But the plan goes like this:
 
  - Each git tree will contain a file called .bupmeta.
- 
+
  - .bupmeta contains an entry for every entry in the tree object, sorted in
    the same order as in the tree.
- 
+
  - the .bupmeta entry lists information like modification times, attributes,
    file ownership, and so on for each file in the tree.
-   
+
  - for backward compatibility with pre-metadata versions of bup (and git,
    for that matter) the .bupmeta file for each tree is optional, and if it's
    missing, files will be assumed to have default permissions.
-   
- The nice thing about this design is that you can walk through each file in
- a tree just by opening the tree and the .bupmeta contents, and iterating
- through both at the same time.
- 
- Trust us, it'll be awesome.  
+
+The nice thing about this design is that you can walk through each file in
+a tree just by opening the tree and the .bupmeta contents, and iterating
+through both at the same time.
+
+Trust us, it'll be awesome.
 
 
 Filesystem Interaction
@@ -419,7 +419,7 @@ serious problems:
    that file.  tar is short for "tape archive"; on a tape, there was no
    better way to do it anyway, so they didn't try.  But on a disk, random
    file access is much, much better when you can figure out how.
-   
+
 2. tar doesn't remember which files it backed up last time, so it has to
    read through the entire file contents again in order to generate the
    tarball, large parts of which will then be skipped by bup since they've
@@ -459,7 +459,7 @@ Thirdly, you can replace the 'bup index' command with something else and not
 have to change anything about the 'bup save' command.  The current 'bup
 index' implementation just blindly walks the whole filesystem looking for
 files that have changed since the last time it was indexed; this works fine,
-but something using inotify instead would be orders of magnitude faster. 
+but something using inotify instead would be orders of magnitude faster.
 Windows and MacOS both have inotify-like services too, but they're totally
 different; if we want to support them, we can simply write new bup commands
 that do the job, and they'll never interfere with each other.
@@ -487,13 +487,13 @@ about bupindex are:
 
  - You can iterate through it much faster than you can iterate through the
    "real" filesystem (using something like the 'find' command).
-   
+
  - If you delete it, you can get it back just by reindexing your filesystem
    (although that can be annoying to wait for); it's not critical to the
    repository itself.
-   
+
  - You can iterate through only particular subtrees if you want.
- 
+
  - There is no need to have more than one index for a particular filesystem,
    since it doesn't store anything about backups; it just stores file
    metadata.  It's really just a cache (or 'index') of your filesystem's
@@ -502,11 +502,11 @@ about bupindex are:
    filesystem to multiple remote repositories to be extra safe, you can
    still use the same bupindex file across all of them, because it's the
    same filesystem every time.
-   
+
  - Filenames in the bupindex are absolute paths, because that's the best way
    to ensure that you only need one bupindex file and that they're
    interchangeable.
-   
+
 
 A note on file "dirtiness"
 --------------------------
@@ -566,7 +566,7 @@ compare the files in the index against the ones in the backup set, and
 update only the ones that have changed.  (Even more interesting things
 happen if people are using the files on the restored system and you haven't
 updated the index yet; the net result would be an automated merge of all
-non-conflicting files.) This would be a poor man's distributed filesystem. 
+non-conflicting files.) This would be a poor man's distributed filesystem.
 The only catch is that nobody has written this feature for 'bup restore'
 yet.  Someday!
 
@@ -596,9 +596,9 @@ code for these tools and vfs.py - they're pretty straightforward.  Some
 things to note:
 
  - None of these use the bupindex for anything.
- 
+
  - For user-friendliness, they present your refs/commits/trees as a single
-   hierarchy (ie.  a filesystem), which isn't really how git repositories
+   hierarchy (ie. a filesystem), which isn't really how git repositories
    are formatted.  So don't get confused!
 
 
