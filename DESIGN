@@ -158,11 +158,11 @@ getting the idea, right?  Join the mailing list and tell us why we're
 wrong.)
 
 (Incidentally, even though the average chunk size is 8192 bytes, the actual
-probability distribution of block sizes ends up being non-uniform; if we
+probability distribution of chunk sizes ends up being non-uniform; if we
 remember our stats classes correctly, which we probably don't, it's probably
-an "exponential distribution".  The idea is that for each byte in the block,
-the probability that it's the last block is one in 8192.  Thus, the
-block sizes end up being skewed toward the smaller end.  That's not
+an "exponential distribution".  The idea is that for each byte in the chunk,
+the probability that it's the last chunk is one in 8192.  Thus, the
+chunk sizes end up being skewed toward the smaller end.  That's not
 necessarily for the best, but maybe it is.  Computer science to the rescue?
 You know the drill.)
 
@@ -174,10 +174,10 @@ mysqldump) and it's basically 100 megs of SQL text.  Tomorrow's database
 dump adds 100 rows to the middle of the file somewhere, soo it's 100.01 megs
 of text.
 
-A naive block splitting algorithm - for example, just dividing the file into
-8192-byte blocks - would be a disaster.  After the first bit of text has
-changed, every block after that would have a different boundary, so most of
-the blocks in the new backup would be different from the previous ones, and
+A naive chunk splitting algorithm - for example, just dividing the file into
+8192-byte chunks - would be a disaster.  After the first bit of text has
+changed, every chunk after that would have a different boundary, so most of
+the chunks in the new backup would be different from the previous ones, and
 you'd have to store the same data all over again.  But with hashsplitting,
 no matter how much data you add, modify, or remove in the middle of the
 file, all the chunks *before* and *after* the affected chunk are absolutely
