@@ -316,9 +316,9 @@ Unfortunately, this breaks down a bit when you have *lots* of packs.  Say
 you have 24 million objects (containing around 200 GiB of data) spread across
 200 packfiles of 1 GiB each.  To look for an object requires searching
 through about 122000 objects per pack; ceil(log2(122000)-7) = 10, so you'll
-have to search 10 times.  About 7 of those searches will be confined to a
+have to search 10 times per pack.  About 7 of those searches will be confined to a
 single 4 KiB memory page, so you'll probably have to page in about 3-4 pages
-per file, times 200 files, which makes 600-800 4 KiB pages (2.4-3.6 MiB)...
+per pack, times 200 packs, which makes 600-800 4 KiB pages (2.4-3.6 MiB)...
 every single time you want to look for an object.
 
 This brings us to another difference between git's and bup's normal use
