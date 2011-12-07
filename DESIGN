@@ -44,11 +44,8 @@ Before you can talk about how bup works, we need to first address what it
 does.  The purpose of bup is essentially to let you "replicate" data between
 two main data structures:
 
-1. Your computer's filesystem;
-
-2. A bup repository. (Yes, we know, that part also resides in your
-   filesystem.  Stop trying to confuse yourself.  Don't worry, we'll be
-   plenty confusing enough as it is.)
+ - A computer's filesystem.
+ - A bup repository.
 
 Essentially, copying data from the filesystem to your repository is called
 "backing stuff up," which is what bup specializes in.  Normally you initiate
@@ -59,16 +56,10 @@ For the inverse operation, ie. copying from the repository to your
 filesystem, you have several choices; the main ones are 'bup restore', 'bup
 ftp', 'bup fuse', and 'bup web'.
 
-Now, those are the basics of backups.  In other words, we just spent about
-half a page telling you that bup backs up and restores data.  Are we having
-fun yet?
-
 
 Repository Structure
 ====================
 
-The next thing you'll want to know is the format of the bup repository,
-because hacking on bup is rather impossible unless you understand that part.
 In short, a bup repository is a git repository.  If you don't know about
 git, you'll want to read about it now.  A really good article to read is
 "Git for Computer Scientists" - you can find it in Google.  Go read it now.
@@ -383,9 +374,7 @@ interfere with git's ability to read the repository.
 Detailed Metadata
 -----------------
 
-So that's the basic structure of a bup repository, which is also a git
-repository.  There's one more thing we have to deal with in bup: filesystem
-metadata.  git repositories are really only intended to store file contents
+Git repositories are really only intended to store file contents
 with a small bit of extra information, like symlink support and
 differentiating between executable and non-executable files.  For the rest,
 we'll have to store it some other way.
@@ -583,13 +572,6 @@ updated the index yet; the net result would be an automated merge of all
 non-conflicting files.) This would be a poor man's distributed filesystem.
 The only catch is that nobody has written this feature for 'bup restore'
 yet.  Someday!
-
-
-How 'bup save' works (cmd/save)
---------------------
-
-This section is too boring and has been omitted.  Once you understand the
-index, there's nothing special about bup save.
 
 
 Retrieving backups: the bup vfs layer (vfs.py, cmd/ls, cmd/ftp, cmd/fuse)
