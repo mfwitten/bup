@@ -136,7 +136,7 @@ Since then, we have replaced the stupidsum algorithm with what we call
 "rollsum," based on code in librsync.  It's essentially the same as what
 rsync does, except we use a fixed window size.
 
-(If you're a computer scientist and can demonstrate that some other rolling
+(If you can demonstrate that some other rolling
 checksum would be faster and/or better and/or have fewer screwy edge cases,
 we need your help!  Avery's out of control!  Join our mailing list!  Please!
 Save us! ...  oh boy, I sure hope he doesn't read this)
