@@ -81,10 +81,12 @@ so on) that allow you to explore your repository and help debug when things
 go wrong.
 
 Now, bup does use these tools a little bit differently than plain git.  We
-need to do this in order to address two deficiencies in git when used for
-large backups, namely a) git bogs down and crashes if you give it really
-large files; b) git is too slow when you give it too many files; and c) git
-doesn't store detailed filesystem metadata.
+need to do this in order to address deficiencies in git when used for
+large backups, namely:
+
+ - Git bogs down and crashes if you give it really large files.
+ - Git is too slow when you give it too many files.
+ - Git doesn't store detailed filesystem metadata.
 
 Let's talk about each of those problems in turn.
 
@@ -233,14 +235,17 @@ so, is not a very big number, this is pretty awesome.  Remember, any git
 object we *don't* change in a new backup is one we can reuse from last time,
 so the deduplication effect is pretty awesome.
 
-Better still, the hashsplit-tree format is good for a) random instead of
-sequential access to data (which you can see in action with 'bup fuse'); and
-b) quickly showing the differences between huge files (which we haven't
-really implemented because we don't need it, but you can try 'git diff -M -C
--C backup1 backup2 -- filename' for a good start).
+Better still, the hashsplit-tree format is good for:
+
+ - random instead of sequential access to data (which you can see in action
+   with 'bup fuse').
+
+ - quickly showing the differences between huge files (which we haven't
+   really implemented because we don't need it, but you can try with
+   `git diff -M -C -C backup1 backup2 -- filename').
 
 So now we've split out 200 GB file into about 24 million pieces.  That
-brings us to git limitation number 2.
+brings us to another one of git's limitations: Large numbers of objects.
 
 
 Handling huge numbers of files (git.PackWriter)
