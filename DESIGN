@@ -47,12 +47,12 @@ two main data structures:
  - A computer's file system.
  - A bup repository.
 
-Essentially, copying data from the file system to your repository is called
+Essentially, copying data from a file system to a repository is called
 "backing stuff up," which is what bup specializes in.  Normally you initiate
 a backup using the 'bup save' command, but that's getting ahead of
 ourselves.
 
-For the inverse operation, ie. copying from the repository to your
+For the inverse operation, ie. copying from a repository to a
 file system, you have several choices; the main ones are 'bup restore', 'bup
 ftp', 'bup fuse', and 'bup web'.
 
@@ -68,11 +68,11 @@ We'll wait.
 Got it?  Okay, so now you're an expert in blobs, trees, commits, and refs,
 the four building blocks of a git repository.  Bup uses these four things,
 and they're formatted in exactly the same way as git does it, so you can use
-git to manipulate the bup repository if you want, and you probably won't
+git to manipulate a bup repository if you want, and you probably won't
 break anything.  It's also a comfort to know you can squeeze data out using
 git, just in case bup fails you, and as a developer, git offers some nice
 tools (like 'git rev-list' and 'git log' and 'git diff' and 'git show' and
-so on) that allow you to explore your repository and help debug when things
+so on) that allow you to explore a bup repository and help debug when things
 go wrong.
 
 Now, bup does use these tools a little bit differently than plain git.  We
@@ -99,8 +99,8 @@ repository format.
 
 Unfortunately, xdelta works great for small files and gets amazingly slow
 and memory-hungry for large files.  For git's main purpose, ie. managing
-your source code, this isn't a problem.  But when backing up your
-file system, you're going to have at least a few large files, and so it's a
+source code, this isn't a problem.  But when backing up a
+file system, there are going to be at least a few large files, and so it's a
 non-starter.  bup has to do something totally different.
 
 What bup does instead of xdelta is what we call "hashsplitting."  We wanted
@@ -115,8 +115,8 @@ For small files, bup's compression won't be as good as xdelta's, but for
 anything over a few mebibytes in size, bup's compression will actually
 *work*, which is a bit advantage over xdelta.
 
-How does hashsplitting work?  It's deceptively simple.  We read through the
-file one byte at a time, calculating a rolling checksum of the last 128
+How does hashsplitting work?  It's deceptively simple.  A file is read
+one byte at a time, calculating a rolling checksum of the last 128
 bytes.  (Why 128?  No reason.  Literally.  We picked it out of the air.
 Probably some other number is better.  Feel free to join the mailing list
 and tell us which one and why.)  (The rolling checksum idea is actually
@@ -219,8 +219,8 @@ always also the boundary of a particular chunk.
 And so on.  Eventually you'll have too many chunk groups, but you can group
 them into supergroups by using another 4 bits, and continue from there.
 
-What you end up with is an actual tree of blobs - which git 'tree' objects
-are ideal to represent.  And if you think about it, just like the original
+What you end up with is an actual tree of blobs, which are represented well
+by git 'tree' objects.  And if you think about it, just like the original
 list of chunks, the tree itself is pretty stable across file modifications.
 Any one modification will only affect the chunks actually containing the
 modifications, thus only the groups containing those chunks, and so on up
@@ -354,9 +354,9 @@ with even a single large idx file.  And if you have lots of RAM, eventually
 the midx lookup table (at least) will end up cached in memory, so only a
 single page should be needed for each lookup.
 
-You generate midx files with 'bup midx'.  The downside of midx files is that
-generating one takes a while, and you have to regenerate it every time you
-add a few packs.
+The midx files are generated with 'bup midx'.  The downside of midx files is that
+generating one takes a while, and it must be regenerated every time a few packs
+are added.
 
 UPDATE: Brandon Low contributed an implementation of "bloom filters", which
 have even better characteristics than midx for certain uses.  Look it up in
@@ -445,8 +445,8 @@ Indexing the file system (cmd/drecurse, cmd/index, index.py)
 Splitting the file system indexing phase into its own program is
 nontraditional, but it gives us several advantages.
 
-The first advantage is trivial, but might be the most important: You can
-index files a lot faster than you can back them up.  That means we can
+The first advantage is trivial, but might be the most important: Files
+can be indexed a lot faster than they can be backed up.  That means we can
 generate the index (.bup/bupindex) first, then have a nice, reliable,
 non-lying completion bar that tells you how much of your file system remains
 to be backed up.  The alternative would be annoying failures like counting
@@ -581,7 +581,8 @@ One of the neat things about bup's storage format, at least compared to most
 backup tools, is it's easy to read a particular file, or even part of a
 file.  That means a read-only virtual file system is easy to generate and
 it'll have good performance characteristics.  Because of git's commit
-structure, you could even use branching and merging to make a transactional
+structure, it could even be possible to use branching and merging to make a
+transactional
 read-write file system... but that's probably getting a little out of bup's
 scope.  Who knows what the future might bring, though?
 
