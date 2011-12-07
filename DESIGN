@@ -273,11 +273,15 @@ files) is worth it.  For backups, it's not; you almost never access your
 backed-up data, so storage time is paramount, and retrieval time is mostly
 unimportant.
 
-To back up that 200 GB file with git and hashsplitting, you'd have to create
-24 million little 8k files, then copy them into a 200 GB packfile, then
-delete the 24 million files again.  That would take about 400 GB of disk
-space to run, require lots of random disk seeks, and require you to go
-through your data twice.
+Backing up that 200 GB file with git and hashsplitting would require:
+
+  1. Storing 24 million little 8k files as separate blobs.
+
+  2. Using 'git gc' to pack the blobs into a 200 GB packfile (after which
+     the blobs are just deleted anyway).
+
+That would take about 400 GB of disk space to run, require lots of random disk
+seeks, and require processing the data twice.
 
 So bup doesn't do that.  It just writes packfiles directly.  Luckily, these
 packfiles are still git-formatted, so git can happily access them once
@@ -418,17 +422,17 @@ can do better.
 Backing up with tarballs would totally be the way to go, except for two
 serious problems:
 
-1. The result isn't easily "seekable".  Tar files have no index, so if (as
-   commonly happens) you only want to restore one file in a 200 GB backup,
-   you'll have to read up to 200 GB before you can get to the beginning of
-   that file.  tar is short for "tape archive"; on a tape, there was no
-   better way to do it anyway, so they didn't try.  But on a disk, random
-   file access is much, much better when you can figure out how.
+ 1. The result isn't easily "seekable".  Tar files have no index, so if (as
+    commonly happens) you only want to restore one file in a 200 GB backup,
+    you'll have to read up to 200 GB before you can get to the beginning of
+    that file.  tar is short for "tape archive"; on a tape, there was no
+    better way to do it anyway, so they didn't try.  But on a disk, random
+    file access is much, much better when you can figure out how.
 
-2. tar doesn't remember which files it backed up last time, so it has to
-   read through the entire file contents again in order to generate the
-   tarball, large parts of which will then be skipped by bup since they've
-   already been stored.  This is much slower than necessary.
+ 2. tar doesn't remember which files it backed up last time, so it has to
+    read through the entire file contents again in order to generate the
+    tarball, large parts of which will then be skipped by bup since they've
+    already been stored.  This is much slower than necessary.
 
 (The second point isn't entirely true for all versions of tar. For example,
 GNU tar has an "incremental" mode that can somewhat mitigate this problem,
@@ -436,9 +440,10 @@ if you're smart enough to know how to use it without hurting yourself.  But
 you still have to decide which backups are "incremental" and which ones will
 be "full" and so on, so even when it works, it's more error-prone than bup.)
 
-Bup divides the backup process into two major steps: a) indexing the
-filesystem, and b) saving file contents into the repository.  Let's look at
-those steps in detail.
+Bup divides the backup process into two major steps:
+
+ 1. Indexing the filesystem
+ 2. Saving file contents into the repository
 
 
 Indexing the filesystem (cmd/drecurse, cmd/index, index.py)
