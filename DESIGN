@@ -296,8 +296,8 @@ single packfile, which 'git gc' usually does eventually.
 The problematic part of large packfiles isn't the packfiles themselves - git
 is designed to expect the total size of all packs to be larger than
 available memory, and once it can handle that, it can handle virtually any
-amount of data about equally efficiently.  The problem is the packfile
-indexes (.idx) files.  In bup we call these idx (pronounced "idix") files
+amount of data about equally efficiently.  The problems arise from the packfile
+indexes (.idx files).  In bup we call these idx (pronounced "idix") files
 instead of using the word "index," because the word index is already used
 for something totally different in git (and thus bup) and we'll become
 hopelessly confused otherwise.
