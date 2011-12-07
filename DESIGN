@@ -37,8 +37,8 @@ Here are the most important things to know:
    somewhere.  So we get the annoyingly long paths.
 
 
-Repository Structure
-====================
+Understanding the Problem
+=========================
 
 Before you can talk about how bup works, we need to first address what it
 does.  The purpose of bup is essentially to let you "replicate" data between
@@ -62,6 +62,10 @@ ftp', 'bup fuse', and 'bup web'.
 Now, those are the basics of backups.  In other words, we just spent about
 half a page telling you that bup backs up and restores data.  Are we having
 fun yet?
+
+
+Repository Structure
+====================
 
 The next thing you'll want to know is the format of the bup repository,
 because hacking on bup is rather impossible unless you understand that part.
