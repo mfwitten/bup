@@ -62,8 +62,8 @@ Repository Structure
 
 In short, a bup repository is a git repository.  If you don't know about
 git, you'll want to read about it now.  A really good article to read is
-"Git for Computer Scientists" - you can find it in Google.  Go read it now.
-We'll wait.
+"Git for Computer Scientists" - you can find it via a search engine such
+as Google.  Go read it now.  We'll wait.
 
 Got it?  Okay, so now you're an expert in blobs, trees, commits, and refs,
 the four building blocks of a git repository.  Bup uses these four things,
