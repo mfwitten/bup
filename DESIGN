@@ -144,7 +144,7 @@ Save us! ...  oh boy, I sure hope he doesn't read this)
 In any case, rollsum seems to do pretty well at its job.
 You can find it in bupsplit.c.  Basically, it converts the last 128 bytes
 read into a 32-bit integer.  What we then do is take the lowest 13
-bits of the rollsum, and if they're all 1's, we consider that to be the end
+bits of the rollsum, and if each is 1, we consider that to be the end
 of a chunk.  This happens on average once every 2^13 = 8192 bytes, so the
 average chunk size is 8192 bytes.
 
@@ -208,14 +208,15 @@ refcounting and reachability analysis doesn't get confused.  Never mind the
 fact that we want you to be able to 'git checkout' your data without any
 special tools.
 
-What we do instead is we extend the hashsplit algorithm a little further
+Instead, we extend the hashsplit algorithm a little further
 using what we call "fanout". Instead of checking just the last 13 bits of
 the checksum, we use additional checksum bits to produce additional splits.
 For example, let's say we use a 4-bit fanout.  That means we'll break a
-series of chunks into its own tree object whenever the last 13+4 = 17 bits
-of the rolling checksum are 1.  Naturally, whenever the lowest 17 bits are
-1, the lowest 13 bits are *also* 1, so the boundary of a chunk group is
-always also the boundary of a particular chunk.
+series of chunks into its own tree object whenever each of the last 13+4 = 17
+bits of the rolling checksum is 1; naturally, whenever this condition is
+satisfied, then the condition for chunk splitting is also satisfied, so
+the boundary of a chunk group is automatically also the boundary of the last 
+chunk in that group.
 
 And so on.  Eventually you'll have too many chunk groups, but you can group
 them into supergroups by using another 4 bits, and continue from there.
