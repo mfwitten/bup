@@ -71,7 +71,7 @@ git, you'll want to read about it now.  A really good article to read is
 We'll wait.
 
 Got it?  Okay, so now you're an expert in blobs, trees, commits, and refs,
-the four building blocks of a git repository.  bup uses these four things,
+the four building blocks of a git repository.  Bup uses these four things,
 and they're formatted in exactly the same way as git does it, so you can use
 git to manipulate the bup repository if you want, and you probably won't
 break anything.  It's also a comfort to know you can squeeze data out using
@@ -187,7 +187,7 @@ separator sequence.  Like magic, the hashsplit chunking algorithm will chunk
 your file the same way every time, even without knowing how it had chunked
 it previously.
 
-The next problem is less obvious: after you store your series of chunks as
+The next problem is less obvious: After you store your series of chunks as
 git blobs, how do you store their sequence?  Each blob has a 20-byte sha1
 identifier, which means the simple list of blobs is going to be 20/8192 =
 0.25% of the file length.  For a 200GB file, that's 488 megs of just
@@ -246,7 +246,7 @@ brings us to git limitation number 2.
 Handling huge numbers of files (git.PackWriter)
 ------------------------------
 
-git is designed for handling reasonably-sized repositories that change
+Git is designed for handling reasonably-sized repositories that change
 relatively infrequently.  (You might think you change your source code
 "frequently" and that git handles much more frequent changes than, say, svn
 can handle.  But that's not the same kind of "frequently" we're talking
@@ -255,14 +255,14 @@ those files is a 100 GB database file with hundreds of daily users.  You
 disk changes so frequently you can't even back up all the revisions even if
 you were backing stuff up 24 hours a day.  That's "frequently".)
 
-git's way of doing things works really nicely for the way software
+Git's way of doing things works really nicely for the way software
 developers write software, but it doesn't really work so well for everything
-else.  The #1 killer is the way it adds new objects to the repository: it
+else.  The #1 killer is the way it adds new objects to the repository: It
 creates one file per blob.  Then you later run 'git gc' and combine those
 files into a single file (using highly efficient xdelta compression, and
 ignoring any files that are no longer relevant).
 
-'git gc' is slow, but for source code repositories, the resulting
+The command 'git gc' is slow, but for source code repositories, the resulting
 super-efficient storage (and associated really fast access to the stored
 files) is worth it.  For backups, it's not; you almost never access your
 backed-up data, so storage time is paramount, and retrieval time is mostly
@@ -317,7 +317,7 @@ per file, times 200 files, which makes 600-800 4k pages (2.4-3.6 megs)...
 every single time you want to look for an object.
 
 This brings us to another difference between git's and bup's normal use
-case.  With git, there's a simple optimization possible here: when looking
+case.  With git, there's a simple optimization possible here: When looking
 for an object, always search the packfiles in MRU (most recently used)
 order.  Related objects are usually clusted together in a single pack, so
 you'll usually end up searching around 3 pages instead of 600, which is a
@@ -325,9 +325,9 @@ tremendous improvement.  (And since you'll quickly end up swapping in all
 the pages in a particular idx file this way, it isn't long before searching
 for a nearby object doesn't involve any swapping at all.)
 
-bup isn't so lucky.  git users spend most of their time examining existing
+Bup isn't so lucky.  Git users spend most of their time examining existing
 objects (looking at logs, generating diffs, checking out branches), which
-lends itself to the above optimization.  bup, on the other hand, spends most
+lends itself to the above optimization.  Bup, on the other hand, spends most
 of its time looking for *nonexistent* objects in the repository so that it
 can back them up.  When you're looking for objects that aren't in the
 repository, there's no good way to optimize; you have to exhaustively check
@@ -362,7 +362,7 @@ incrementally every time we get a new idx, without regenerating from
 scratch.  That makes the update phase much faster, and means we can also get
 away with generating midxes less often.
 
-midx files are a bup-specific optimization and git doesn't know what to do
+The midx files are a bup-specific optimization and git doesn't know what to do
 with them.  However, since they're stored as separate files, they don't
 interfere with git's ability to read the repository.
 
@@ -431,7 +431,7 @@ if you're smart enough to know how to use it without hurting yourself.  But
 you still have to decide which backups are "incremental" and which ones will
 be "full" and so on, so even when it works, it's more error-prone than bup.)
 
-bup divides the backup process into two major steps: a) indexing the
+Bup divides the backup process into two major steps: a) indexing the
 filesystem, and b) saving file contents into the repository.  Let's look at
 those steps in detail.
 
@@ -442,7 +442,7 @@ Indexing the filesystem (cmd/drecurse, cmd/index, index.py)
 Splitting the filesystem indexing phase into its own program is
 nontraditional, but it gives us several advantages.
 
-The first advantage is trivial, but might be the most important: you can
+The first advantage is trivial, but might be the most important: You can
 index files a lot faster than you can back them up.  That means we can
 generate the index (.bup/bupindex) first, then have a nice, reliable,
 non-lying completion bar that tells you how much of your filesystem remains
@@ -533,7 +533,7 @@ it; it only means that if you *do* have it, that you don't need to back up
 the file.  Thus, 'bup save' needs to check every file in the index to make
 sure its hash exists, not just that it's valid.
 
-There's an optimization possible, however: if you know a particular tree's
+There's an optimization possible, however: If you know a particular tree's
 hash is valid and exists (say /usr), then you don't need to check the
 validity of all its children; because of the way git trees and blobs work,
 if your repository is valid and you have a tree object, then you have all
@@ -559,7 +559,7 @@ large ones (as in 'bup save --smaller').  Each of your backups will be
 "complete," in that they contain all the small files and the large ones, but
 intermediate ones will just contain out-of-date copies of the large files.
 
-A final game we can play with the bupindex involves restoring: when you
+A final game we can play with the bupindex involves restoring: When you
 restore a directory from a previous backup, you can update the bupindex
 right away.  Then, if you want to restore a different backup on top, you can
 compare the files in the index against the ones in the backup set, and
