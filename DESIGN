@@ -184,11 +184,12 @@ separator sequence.  Like magic, the hashsplit chunking algorithm will chunk
 your file the same way every time, even without knowing how it had chunked
 it previously.
 
-The next problem is less obvious: After you store your series of chunks as
-git blobs, how do you store their sequence?  Each blob has a 20-byte sha1
-identifier, which means the simple list of blobs is going to be 20/8192 =
-0.25% of the file length.  For a 200 GiB file, that's 488 MiB of just
-sequence data.
+The next problem is less obvious: After chunks are stored as git blobs, how
+are those blobs ordered correctly in order to recreate the original file?
+Each blob has a 20-byte sha1 identifier, which means that storing a simple
+list of those identifiers is going to require additional storage that is on
+average 20/8192 = 0.25% of the original file's size; for a 200 GiB file, that's
+488 MiB just for sequencing data!
 
 As an overhead percentage, 0.25% basically doesn't matter.  488 MiB sounds
 like a lot, but compared to the 200 GiB you have to store anyway, it's
