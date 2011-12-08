@@ -420,7 +420,7 @@ serious problems:
  1. The result isn't easily "seekable".  Tar files have no index, so if (as
     commonly happens) you only want to restore one file in a 200 GiB backup,
     you'll have to read up to 200 GiB before you can get to the beginning of
-    that file.  tar is short for "tape archive"; on a tape, there was no
+    that file.  tar is short for "tape archive"; on a tape, there is no
     better way to do it anyway, so they didn't try.  But on a disk, random
     file access is much, much better when you can figure out how.
 
