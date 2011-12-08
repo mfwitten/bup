@@ -124,8 +124,8 @@ stolen from rsync and xdelta, although we use it differently.  And they use
 some kind of variable window size based on a formula we don't totally
 understand.)
 
-The original rolling checksum algorithm we used was called "stupidsum",
-because it was based on the only checksum Avery remembered how to calculate at
+The original rolling checksum algorithm we used is called "stupidsum",
+because it is based on the only checksum Avery remembered how to calculate at
 the time.  He also remembered that it was the introductory checksum
 algorithm in a whole article about how to make good checksums that he read
 about 15 years ago, and it was thoroughly discredited in that article for
@@ -141,12 +141,14 @@ checksum would be faster and/or better and/or have fewer screwy edge cases,
 we need your help!  Avery's out of control!  Join our mailing list!  Please!
 Save us! ...  oh boy, I sure hope he doesn't read this)
 
-In any case, rollsum seems to do pretty well at its job.
-You can find it in bupsplit.c.  Basically, it converts the last 128 bytes
-read into a 32-bit integer.  What we then do is take the lowest 13
-bits of the rollsum, and if each is 1, we consider that to be the end
-of a chunk.  This happens on average once every 2^13 = 8192 bytes, so the
-average chunk size is 8192 bytes.
+In any case, rollsum seems to do pretty well at its job. You can find it in
+bupsplit.c. Basically, it converts the last read 128 bytes into a 32-bit
+integer checksum. If each of the lowest 13 bits of the checksum is 1, then
+the 128 bytes are considered to be the end of a chunk. This happens on
+average once every 2^13 = 8192 bytes, so the average chunk size is 8192
+bytes. Thus, each [big] file is being divided into chunks and each chunk is
+stored separately as a git blob (indexed by an object id, which is a sha1
+hash).
 
 (Why 13 bits?  Well, we picked the number at random and... eugh.  You're
 getting the idea, right?  Join the mailing list and tell us why we're
@@ -161,13 +163,10 @@ chunk sizes end up being skewed toward the smaller end.  That's not
 necessarily for the best, but maybe it is.  Computer science to the rescue?
 You know the drill.)
 
-Anyway, so we're dividing up each [big] file into chunks based on the rolling
-checksum.  Then we store each chunk separately (indexed by its sha1sum) as a
-git blob.  Why do we split this way?  Well, because the results are actually
-really nice.  Let's imagine you have a big mysql database dump (produced by
-mysqldump) and it's basically 100 MiB of SQL text.  Tomorrow's database
-dump adds 100 rows to the middle of the file somewhere, so it's 100.01 MiB
-of text.
+The results are actually really nice.  Let's imagine you have a big mysql
+database dump (produced by mysqldump) and it's basically 100 MiB of SQL text.
+Tomorrow's database dump adds 100 rows to the middle of the file somewhere,
+so it's 100.01 MiB of text.
 
 A naive chunk splitting algorithm - for example, just dividing the file into
 8192-byte chunks - would be a disaster.  After the first bit of text has
@@ -175,12 +174,12 @@ changed, every chunk after that would have a different boundary, so most of
 the chunks in the new backup would be different from the previous ones, and
 you'd have to store the same data all over again.  But with hashsplitting,
 no matter how much data you add, modify, or remove in the middle of the
-file, all the chunks *before* and *after* the affected chunk are absolutely
-the same.  All that matters to the hashsplitting algorithm is the 32-byte
+file, all the chunks *before* and *after* the affected chunk(s) are absolutely
+the same; all that matters to the hashsplitting algorithm is the 32-byte
 "separator" sequence, and a single change can only affect, at most, one
 separator sequence or the bytes between two separator sequences.  And
 because of rollsum, about one in 8192 possible 128-byte sequences is a
-separator sequence.  Like magic, the hashsplit chunking algorithm will chunk
+separator sequence.  Like magic, the hashsplit chunking algorithm divides
 your file the same way every time, even without knowing how it had chunked
 it previously.
 
@@ -191,46 +190,46 @@ list of those identifiers is going to require additional storage that is on
 average 20/8192 = 0.25% of the original file's size; for a 200 GiB file, that's
 488 MiB just for sequencing data!
 
-As an overhead percentage, 0.25% basically doesn't matter.  488 MiB sounds
-like a lot, but compared to the 200 GiB you have to store anyway, it's
-irrelevant.  What *is* relevant is that 488 MiB is a lot of memory you have
-to use in order to to keep track of the list.  Worse, if you back up an
-almost-identical file tomorrow, you'll have *another* 488 MiB blob to keep
-track of, and it'll be almost but not quite the same as last time.
+As an overhead percentage, 0.25% basically doesn't matter; 488 MiB sounds
+like a lot, but compared to the 200 GiB that must be stored anyway, it's
+irrelevant.  What *is* relevant is that 488 MiB is a lot of memory for
+keeping track of the list.  Worse, even if an almost-identical 200 GiB file
+is backed up tomorrow, there will be *another* (almost identical) 488 MiB list
+to track.
 
 Hmm, big files, each one almost the same as the last... you know where this
 is going, right?
 
-Actually no!  Ha!  We didn't split this list in the same way.  We could
-have, in fact, but it wouldn't have been very "git-like", since we'd like to
+Actually no!  Ha!  This sequencing list isn't split in the same way.  It could
+be, in fact, but it wouldn't be very "git-like"; it would be nice to
 store the list as a git 'tree' object in order to make sure git's
 refcounting and reachability analysis doesn't get confused.  Never mind the
-fact that we want you to be able to 'git checkout' your data without any
-special tools.
+fact that it may be desirable to use 'git checkout' on a bup repo without any
+special considerations.
 
-Instead, we extend the hashsplit algorithm a little further
+Instead, the hashsplit algorithm was extended a little further
 using what we call "fanout". Instead of checking just the last 13 bits of
-the checksum, we use additional checksum bits to produce additional splits.
-For example, let's say we use a 4-bit fanout.  That means we'll break a
-series of chunks into its own tree object whenever each of the last 13+4 = 17
-bits of the rolling checksum is 1; naturally, whenever this condition is
-satisfied, then the condition for chunk splitting is also satisfied, so
-the boundary of a chunk group is automatically also the boundary of the last 
-chunk in that group.
+the checksum, additional bits are used to group chunks together.
+For example, let's say a 4-bit fanout is used.  That means the last read
+contiguous group of chunks is placed into its own tree object whenever each
+of the last 13+4 = 17 bits of the rolling checksum is 1; naturally, whenever
+this condition for chunk grouping is satisfied, then the condition for
+chunk splitting is also satisfied, so the boundary of a chunk group is
+automatically also the boundary of the last chunk in that group.
 
-And so on.  Eventually you'll have too many chunk groups, but you can group
-them into supergroups by using another 4 bits, and continue from there.
+Eventually there are too many chunk groups, but they too can be grouped into
+supergroups by using another 4 bits, and so on.
 
-What you end up with is an actual tree of blobs, which are represented well
-by git 'tree' objects.  And if you think about it, just like the original
-list of chunks, the tree itself is pretty stable across file modifications.
-Any one modification will only affect the chunks actually containing the
+The result is an actual tree of blobs, which are represented well by
+git 'tree' objects, and just like the original flat list of chunks we
+considered, the tree itself is pretty stable across file modifications;
+any one modification only affects the chunks actually containing the
 modifications, thus only the groups containing those chunks, and so on up
 the tree.  Essentially, the number of changed git objects is O(log n)
-where n is the number of chunks.  Since log 200 GiB, using a base of 16 or
-so, is not a very big number, this is pretty awesome.  Remember, any git
-object we *don't* change in a new backup is one we can reuse from last time,
-so the deduplication effect is pretty awesome.
+where n is the number of chunks.  Since log 200 GiB (using a base of 16 or
+so) is not a very big number, this is pretty awesome.  Remember, any git
+object *not* changed in a new backup is one that can be reused from last
+time, so the deduplication effect is pretty awesome.
 
 Better still, the hashsplit-tree format is good for:
 
@@ -241,7 +240,7 @@ Better still, the hashsplit-tree format is good for:
    really implemented because we don't need it, but you can try with
    `git diff -M -C -C backup1 backup2 -- filename').
 
-So now we've split out 200 GiB file into about 24 million pieces.  That
+So, now a 200 GiB file has been split into about 24 million pieces.  That
 brings us to another one of git's limitations: Large numbers of objects.
 
 
