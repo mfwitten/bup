@@ -539,42 +539,38 @@ it; it only means that if you *do* have it, that you don't need to back up
 the file.  Thus, 'bup save' needs to check every file in the index to make
 sure its hash exists, not just that it's valid.
 
-There's an optimization possible, however: If you know a particular tree's
-hash is valid and exists (say /usr), then you don't need to check the
-validity of all its children; because of the way git trees and blobs work,
-if your repository is valid and you have a tree object, then you have all
-the blobs it points to.  You won't back up a tree object without backing up
-its blobs first, so you don't need to double check it next time.  (If you
-really want to double check this, it belongs in a tool like 'bup fsck' or
-'git fsck'.) So in short, 'bup save' on a "clean" index (all files are
-marked IX_HASHVALID) can be very fast; we just check our repository and see
-if the top level IX_HASHVALID sha1 exists.  If it does, then we're done.
+There's an optimization possible, however: If the hash of a particular tree
+(say that of /usr) is valid, then the hash of each of the tree's children
+is also valid because of the way git object ids (sha1 hashes) are calculated.
+(Double checking the validity might be useful for a tool like 'bup fsck' or
+'git fsck'.) So in short, 'bup save' on a "clean" index (each file has its
+IX_HASHVALID set) can be very fast; it is only necessary to ensure that
+the top level's IX_HASHVALID is set and an object with the corresponding
+git object id (sha1 hash) exists.
 
-Similarly, if not the entire index is valid, you can still avoid recursing
-into subtrees if those particular subtrees are IX_HASHVALID and their sha1s
-are in the repository.  The net result is that, as long as you never lose
-your index, 'bup save' can always run very fast.
+Similarly, if not the entire index is valid, recursising into a subtree can
+be avoided if that particular subtree's IX_HASHVALID is set and an object
+with the corresponding git object id (sha1 hash) exists.  The net result is
+that as long as the index is never lost, 'bup save' can always run very fast.
 
-Another interesting trick is that you can skip backing up files even if
-IX_HASHVALID *isn't* set, as long as you have that file's sha1 in the
-repository.  What that means is you've chosen not to backup the latest
-version of that file; instead, your new backup set just contains the
-most-recently-known valid version of that file.  This is a good trick if you
-want to do frequent backups of smallish files and infrequent backups of
-large ones (as in 'bup save --smaller').  Each of your backups will be
-"complete," in that they contain all the small files and the large ones, but
-intermediate ones will just contain out-of-date copies of the large files.
+As a user of bup, you can skip backing up files even if IX_HASHVALID
+*isn't* set. For example, let's say you want to make frequent backups of
+smallish files and infrequent backups of large files (as in 'bup save
+--smaller'). In such a case, you've chosen not to back up the latest
+version of some large file; instead, the set of backed up files just
+contains the most-recently-known valid version of that file as it was last
+backed up, and from that aspect its IX_HASHVALID can be considered set.
 
-A final game we can play with the bupindex involves restoring: When you
-restore a directory from a previous backup, you can update the bupindex
-right away.  Then, if you want to restore a different backup on top, you can
-compare the files in the index against the ones in the backup set, and
-update only the ones that have changed.  (Even more interesting things
-happen if people are using the files on the restored system and you haven't
-updated the index yet; the net result would be an automated merge of all
-non-conflicting files.) This would be a poor man's distributed file system.
-The only catch is that nobody has written this feature for 'bup restore'
-yet.  Someday!
+Furthermore, when a directory is restored from a backup, the bupindex can
+be updated right away. Then, restoring a second backup on top of the last
+restoration only requires updating the files that differ between the second
+backup and the bupindex.
+
+Even more interesting things could happen if people were using the files
+after the first restoration; then, the second restoration could be an
+automated merge of all non-conflicting files, which would be a poor man's
+distributed file system. (The only catch is that nobody has written this
+feature for 'bup restore' yet. Someday!)
 
 
 Retrieving backups: the bup vfs layer (vfs.py, cmd/ls, cmd/ftp, cmd/fuse)
