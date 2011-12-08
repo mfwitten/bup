@@ -573,7 +573,7 @@ distributed file system. (The only catch is that nobody has written this
 feature for 'bup restore' yet. Someday!)
 
 
-Retrieving backups: the bup vfs layer (vfs.py, cmd/ls, cmd/ftp, cmd/fuse)
+Retrieving backups: The bup VFS layer (vfs.py, cmd/ls, cmd/ftp, cmd/fuse)
 =====================================
 
 One of the neat things about bup's storage format, at least compared to most
