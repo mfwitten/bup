@@ -117,7 +117,7 @@ functionality.  If you just take your entire filesystem and put it in a
 giant tarball each day, then send that tarball to bup, bup will be able to
 efficiently store only the changes to that tarball from one day to the next.
 For small files, bup's compression won't be as good as xdelta's, but for
-anything over a few megabytes in size, bup's compression will actually
+anything over a few mebibytes in size, bup's compression will actually
 *work*, which is a bit advantage over xdelta.
 
 How does hashsplitting work?  It's deceptively simple.  We read through the
@@ -170,8 +170,8 @@ Anyway, so we're dividing up those files into chunks based on the rolling
 checksum.  Then we store each chunk separately (indexed by its sha1sum) as a
 git blob.  Why do we split this way?  Well, because the results are actually
 really nice.  Let's imagine you have a big mysql database dump (produced by
-mysqldump) and it's basically 100 megs of SQL text.  Tomorrow's database
-dump adds 100 rows to the middle of the file somewhere, soo it's 100.01 megs
+mysqldump) and it's basically 100 MiB of SQL text.  Tomorrow's database
+dump adds 100 rows to the middle of the file somewhere, so it's 100.01 MiB
 of text.
 
 A naive chunk splitting algorithm - for example, just dividing the file into
@@ -192,14 +192,14 @@ it previously.
 The next problem is less obvious: After you store your series of chunks as
 git blobs, how do you store their sequence?  Each blob has a 20-byte sha1
 identifier, which means the simple list of blobs is going to be 20/8192 =
-0.25% of the file length.  For a 200GB file, that's 488 megs of just
+0.25% of the file length.  For a 200 GiB file, that's 488 MiB of just
 sequence data.
 
-As an overhead percentage, 0.25% basically doesn't matter.  488 megs sounds
-like a lot, but compared to the 200GB you have to store anyway, it's
-irrelevant.  What *is* relevant is that 488 megs is a lot of memory you have
+As an overhead percentage, 0.25% basically doesn't matter.  488 MiB sounds
+like a lot, but compared to the 200 GiB you have to store anyway, it's
+irrelevant.  What *is* relevant is that 488 MiB is a lot of memory you have
 to use in order to to keep track of the list.  Worse, if you back up an
-almost-identical file tomorrow, you'll have *another* 488 meg blob to keep
+almost-identical file tomorrow, you'll have *another* 488 MiB blob to keep
 track of, and it'll be almost but not quite the same as last time.
 
 Hmm, big files, each one almost the same as the last... you know where this
@@ -230,7 +230,7 @@ list of chunks, the tree itself is pretty stable across file modifications.
 Any one modification will only affect the chunks actually containing the
 modifications, thus only the groups containing those chunks, and so on up
 the tree.  Essentially, the number of changed git objects is O(log n)
-where n is the number of chunks.  Since log 200 GB, using a base of 16 or
+where n is the number of chunks.  Since log 200 GiB, using a base of 16 or
 so, is not a very big number, this is pretty awesome.  Remember, any git
 object we *don't* change in a new backup is one we can reuse from last time,
 so the deduplication effect is pretty awesome.
@@ -244,7 +244,7 @@ Better still, the hashsplit-tree format is good for:
    really implemented because we don't need it, but you can try with
    `git diff -M -C -C backup1 backup2 -- filename').
 
-So now we've split out 200 GB file into about 24 million pieces.  That
+So now we've split out 200 GiB file into about 24 million pieces.  That
 brings us to another one of git's limitations: Large numbers of objects.
 
 
@@ -256,7 +256,7 @@ relatively infrequently.  (You might think you change your source code
 "frequently" and that git handles much more frequent changes than, say, svn
 can handle.  But that's not the same kind of "frequently" we're talking
 about.  Imagine you're backing up all the files on your disk, and one of
-those files is a 100 GB database file with hundreds of daily users.  You
+those files is a 100 GiB database file with hundreds of daily users.  You
 disk changes so frequently you can't even back up all the revisions even if
 you were backing stuff up 24 hours a day.  That's "frequently".)
 
@@ -273,14 +273,14 @@ files) is worth it.  For backups, it's not; you almost never access your
 backed-up data, so storage time is paramount, and retrieval time is mostly
 unimportant.
 
-Backing up that 200 GB file with git and hashsplitting would require:
+Backing up that 200 GiB file with git and hashsplitting would require:
 
-  1. Storing 24 million little 8k files as separate blobs.
+  1. Storing 24 million little 8 KiB files as separate blobs.
 
-  2. Using 'git gc' to pack the blobs into a 200 GB packfile (after which
+  2. Using 'git gc' to pack the blobs into a 200 GiB packfile (after which
      the blobs are just deleted anyway).
 
-That would take about 400 GB of disk space to run, require lots of random disk
+That would take about 400 GiB of disk space to run, require lots of random disk
 seeks, and require processing the data twice.
 
 So bup doesn't do that.  It just writes packfiles directly.  Luckily, these
@@ -317,12 +317,12 @@ hashes in the pack, with an optimized first step (you can read about it
 elsewhere) that somewhat improves it to O(log(n)-7).
 
 Unfortunately, this breaks down a bit when you have *lots* of packs.  Say
-you have 24 million objects (containing around 200 GB of data) spread across
-200 packfiles of 1GB each.  To look for an object requires you search
+you have 24 million objects (containing around 200 GiB of data) spread across
+200 packfiles of 1 GiB each.  To look for an object requires you search
 through about 122000 objects per pack; ceil(log2(122000)-7) = 10, so you'll
 have to search 10 times.  About 7 of those searches will be confined to a
-single 4k memory page, so you'll probably have to page in about 3-4 pages
-per file, times 200 files, which makes 600-800 4k pages (2.4-3.6 megs)...
+single 4 KiB memory page, so you'll probably have to page in about 3-4 pages
+per file, times 200 files, which makes 600-800 4 KiB pages (2.4-3.6 MiB)...
 every single time you want to look for an object.
 
 This brings us to another difference between git's and bup's normal use
@@ -423,8 +423,8 @@ Backing up with tarballs would totally be the way to go, except for two
 serious problems:
 
  1. The result isn't easily "seekable".  Tar files have no index, so if (as
-    commonly happens) you only want to restore one file in a 200 GB backup,
-    you'll have to read up to 200 GB before you can get to the beginning of
+    commonly happens) you only want to restore one file in a 200 GiB backup,
+    you'll have to read up to 200 GiB before you can get to the beginning of
     that file.  tar is short for "tape archive"; on a tape, there was no
     better way to do it anyway, so they didn't try.  But on a disk, random
     file access is much, much better when you can figure out how.
@@ -458,8 +458,8 @@ generate the index (.bup/bupindex) first, then have a nice, reliable,
 non-lying completion bar that tells you how much of your filesystem remains
 to be backed up.  The alternative would be annoying failures like counting
 the number of *files* remaining (as rsync does), even though one of the
-files is a virtual machine image of 80 GB, and the 1000 other files are each
-under 10k.  With bup, the percentage complete is the *real* percentage
+files is a virtual machine image of 80 GiB, and the 1000 other files are each
+under 10 KiB.  With bup, the percentage complete is the *real* percentage
 complete, which is very pleasant.
 
 Secondly, it makes it easier to debug and test; you can play with the index
