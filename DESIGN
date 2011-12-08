@@ -44,16 +44,16 @@ Before you can talk about how bup works, we need to first address what it
 does.  The purpose of bup is essentially to let you "replicate" data between
 two main data structures:
 
- - A computer's filesystem.
+ - A computer's file system.
  - A bup repository.
 
-Essentially, copying data from the filesystem to your repository is called
+Essentially, copying data from the file system to your repository is called
 "backing stuff up," which is what bup specializes in.  Normally you initiate
 a backup using the 'bup save' command, but that's getting ahead of
 ourselves.
 
 For the inverse operation, ie. copying from the repository to your
-filesystem, you have several choices; the main ones are 'bup restore', 'bup
+file system, you have several choices; the main ones are 'bup restore', 'bup
 ftp', 'bup fuse', and 'bup web'.
 
 
@@ -81,7 +81,7 @@ large backups, namely:
 
  - Git bogs down and crashes if you give it really large files.
  - Git is too slow when you give it too many files.
- - Git doesn't store detailed filesystem metadata.
+ - Git doesn't store detailed file system metadata.
 
 Let's talk about each of those problems in turn.
 
@@ -100,7 +100,7 @@ repository format.
 Unfortunately, xdelta works great for small files and gets amazingly slow
 and memory-hungry for large files.  For git's main purpose, ie. managing
 your source code, this isn't a problem.  But when backing up your
-filesystem, you're going to have at least a few large files, and so it's a
+file system, you're going to have at least a few large files, and so it's a
 non-starter.  bup has to do something totally different.
 
 What bup does instead of xdelta is what we call "hashsplitting."  We wanted
@@ -108,7 +108,7 @@ a general-purpose way to efficiently back up *any* large file that might
 change in small ways, without storing the entire file every time.  In fact,
 the original versions of bup could only store a single file at a time;
 surprisingly enough, this was enough to give us a large part of bup's
-functionality.  If you just take your entire filesystem and put it in a
+functionality.  If you just take your entire file system and put it in a
 giant tarball each day, then send that tarball to bup, bup will be able to
 efficiently store only the changes to that tarball from one day to the next.
 For small files, bup's compression won't be as good as xdelta's, but for
@@ -435,20 +435,20 @@ be "full" and so on, so even when it works, it's more error-prone than bup.)
 
 Bup divides the backup process into two major steps:
 
- 1. Indexing the filesystem
+ 1. Indexing the file system
  2. Saving file contents into the repository
 
 
-Indexing the filesystem (cmd/drecurse, cmd/index, index.py)
+Indexing the file system (cmd/drecurse, cmd/index, index.py)
 -----------------------
 
-Splitting the filesystem indexing phase into its own program is
+Splitting the file system indexing phase into its own program is
 nontraditional, but it gives us several advantages.
 
 The first advantage is trivial, but might be the most important: You can
 index files a lot faster than you can back them up.  That means we can
 generate the index (.bup/bupindex) first, then have a nice, reliable,
-non-lying completion bar that tells you how much of your filesystem remains
+non-lying completion bar that tells you how much of your file system remains
 to be backed up.  The alternative would be annoying failures like counting
 the number of *files* remaining (as rsync does), even though one of the
 files is a virtual machine image of 80 GiB, and the 1000 other files are each
@@ -460,7 +460,7 @@ without actually backing up any files.
 
 Thirdly, you can replace the 'bup index' command with something else and not
 have to change anything about the 'bup save' command.  The current 'bup
-index' implementation just blindly walks the whole filesystem looking for
+index' implementation just blindly walks the whole file system looking for
 files that have changed since the last time it was indexed; this works fine,
 but something using inotify instead would be orders of magnitude faster.
 Windows and MacOS both have inotify-like services too, but they're totally
@@ -489,22 +489,22 @@ optimal, and will probably change again.  The most important things to know
 about bupindex are:
 
  - You can iterate through it much faster than you can iterate through the
-   "real" filesystem (using something like the 'find' command).
+   "real" file system (using something like the 'find' command).
 
- - If you delete it, you can get it back just by reindexing your filesystem
+ - If you delete it, you can get it back just by reindexing your file system
    (although that can be annoying to wait for); it's not critical to the
    repository itself.
 
  - You can iterate through only particular subtrees if you want.
 
- - There is no need to have more than one index for a particular filesystem,
+ - There is no need to have more than one index for a particular file system,
    since it doesn't store anything about backups; it just stores file
-   metadata.  It's really just a cache (or 'index') of your filesystem's
+   metadata.  It's really just a cache (or 'index') of your file system's
    existing metadata.  You could share the bupindex between repositories, or
    between multiple users on the same computer.  If you back up your
-   filesystem to multiple remote repositories to be extra safe, you can
+   file system to multiple remote repositories to be extra safe, you can
    still use the same bupindex file across all of them, because it's the
-   same filesystem every time.
+   same file system every time.
 
  - Filenames in the bupindex are absolute paths, because that's the best way
    to ensure that you only need one bupindex file and that they're
@@ -569,7 +569,7 @@ compare the files in the index against the ones in the backup set, and
 update only the ones that have changed.  (Even more interesting things
 happen if people are using the files on the restored system and you haven't
 updated the index yet; the net result would be an automated merge of all
-non-conflicting files.) This would be a poor man's distributed filesystem.
+non-conflicting files.) This would be a poor man's distributed file system.
 The only catch is that nobody has written this feature for 'bup restore'
 yet.  Someday!
 
@@ -579,14 +579,14 @@ Retrieving backups: the bup vfs layer (vfs.py, cmd/ls, cmd/ftp, cmd/fuse)
 
 One of the neat things about bup's storage format, at least compared to most
 backup tools, is it's easy to read a particular file, or even part of a
-file.  That means a read-only virtual filesystem is easy to generate and
+file.  That means a read-only virtual file system is easy to generate and
 it'll have good performance characteristics.  Because of git's commit
 structure, you could even use branching and merging to make a transactional
-read-write filesystem... but that's probably getting a little out of bup's
+read-write file system... but that's probably getting a little out of bup's
 scope.  Who knows what the future might bring, though?
 
-Read-only filesystems are well within our reach today, however.  The 'bup
-ls', 'bup ftp', and 'bup fuse' commands all use a "VFS" (virtual filesystem)
+Read-only file systems are well within our reach today, however.  The 'bup
+ls', 'bup ftp', and 'bup fuse' commands all use a "VFS" (virtual file system)
 layer to let you access your repositories.  Feel free to explore the source
 code for these tools and vfs.py - they're pretty straightforward.  Some
 things to note:
@@ -594,7 +594,7 @@ things to note:
  - None of these use the bupindex for anything.
 
  - For user-friendliness, they present your refs/commits/trees as a single
-   hierarchy (ie. a filesystem), which isn't really how git repositories
+   hierarchy (ie. a file system), which isn't really how git repositories
    are formatted.  So don't get confused!
 
 
