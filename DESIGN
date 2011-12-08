@@ -577,23 +577,22 @@ Retrieving backups: The bup VFS layer (vfs.py, cmd/ls, cmd/ftp, cmd/fuse)
 =====================================
 
 One of the neat things about bup's storage format, at least compared to most
-backup tools, is it's easy to read a particular file, or even part of a
-file.  That means a read-only virtual file system is easy to generate and
-it'll have good performance characteristics.  Because of git's commit
-structure, it could even be possible to use branching and merging to make a
-transactional
+backup tools, is it's easy to read a particular file (or even part of a
+file).  That means a read-only virtual file system ("VFS") is easy to generate
+with good performance characteristics.  Because of git's commit structure, it
+could even be possible to use branching and merging to make a transactional
 read-write file system... but that's probably getting a little out of bup's
 scope.  Who knows what the future might bring, though?
 
 Read-only file systems are well within our reach today, however.  The 'bup
-ls', 'bup ftp', and 'bup fuse' commands all use a "VFS" (virtual file system)
-layer to let you access your repositories.  Feel free to explore the source
-code for these tools and vfs.py - they're pretty straightforward.  Some
-things to note:
+ls', 'bup ftp', and 'bup fuse' commands all provide a virtual file system
+through which backups can be accessed.  Feel free to explore the source
+code for these tools and vfs.py - they're pretty straightforward, but here
+are some things to note:
 
- - None of these use the bupindex for anything.
+ - None of these tools use the bupindex for anything.
 
- - For user-friendliness, they present your refs/commits/trees as a single
+ - For user-friendliness, they present refs/commits/trees as a single
    hierarchy (ie. a file system), which isn't really how git repositories
    are formatted.  So don't get confused!
 
