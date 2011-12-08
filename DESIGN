@@ -312,52 +312,53 @@ The performance of the binary search is about O(log n) with the number of
 hashes in the pack, with an optimized first step (you can read about it
 elsewhere) that somewhat improves it to O(log(n)-7).
 
-Unfortunately, this breaks down a bit when you have *lots* of packs.  Say
-you have 24 million objects (containing around 200 GiB of data) spread across
-200 packfiles of 1 GiB each.  To look for an object requires searching
-through about 122000 objects per pack; ceil(log2(122000)-7) = 10, so you'll
-have to search 10 times per pack.  About 7 of those searches will be confined to a
-single 4 KiB memory page, so you'll probably have to page in about 3-4 pages
-per pack, times 200 packs, which makes 600-800 4 KiB pages (2.4-3.6 MiB)...
-every single time you want to look for an object.
+Unfortunately, this breaks down a bit when there are *lots* of packs.  Say
+there are 24 million objects (containing around 200 GiB of data) spread
+across 200 packfiles of 1 GiB each.  To look for an object requires searching
+through about 122000 objects per pack; ceil(log2(122000)-7) = 10, so it
+requires searching 10 times per pack.  About 7 of those searches might be
+confined to a single 4 KiB memory page; hence the search might require
+about 3-to-4 page reads per pack. For 200 packs, that makes a worst case
+scenario of 600-to-800 4 KiB page reads (2.4-3.6 MiB) every single time an
+objected must be found.
 
 This brings us to another difference between git's and bup's normal use
 case.  With git, there's a simple optimization possible here: When looking
 for an object, always search the packfiles in MRU (most recently used)
 order.  Related objects are usually clusted together in a single pack, so
-you'll usually end up searching around 3 pages instead of 600, which is a
-tremendous improvement.  (And since you'll quickly end up swapping in all
-the pages in a particular idx file this way, it isn't long before searching
-for a nearby object doesn't involve any swapping at all.)
+usually, the search ends up reading around 3 pages instead of 600, which is a
+tremendous improvement!  (Because all the pages in a particular idx file
+end up being swapped in, it isn't long before searching for a nearby object
+doesn't involve any swapping at all.)
 
-Bup isn't so lucky.  Git users spend most of their time examining existing
+Bup isn't so lucky.  Git users spend most of the time examining existing
 objects (looking at logs, generating diffs, checking out branches), which
-lends itself to the above optimization.  Bup, on the other hand, spends most
-of its time looking for *nonexistent* objects in the repository so that it
-can back them up.  When you're looking for objects that aren't in the
-repository, there's no good way to optimize; you have to exhaustively check
-all the packs, one by one, to ensure that none of them contain the data you
-want.
+is a usage pattern that lends itself to the aforementioned optimization.
+Bup, on the other hand, spends most of the time looking for *nonexistent*
+objects in the repository, so that it can back them up.  When looking for
+objects that aren't in the repository, there's no good way to optimize; all
+the packs must be checked exhaustively, one by one, to ensure that none of
+them contains the sought data.
 
 To improve performance of this sort of operation, bup introduces midx
 (pronounced "midix" and short for "multi-idx") files.  As the name implies,
 they index multiple packs at a time.
 
-Imagine you had a midx file for your 200 packs.  midx files are a lot like
-idx files; they have a lookup table at the beginning that narrows down the
-initial search, followed by a binary search.  Unlike idx files (which
-have a fixed-size 256-entry lookup table), midx tables have a variably-sized
-table that makes sure the entire binary search can be contained to a single
-page of the midx file.  Basically, the lookup table tells you which page to
-load, and then you binary search inside that page.  A typical search thus
-only requires the kernel to swap in two pages, which is better than results
-with even a single large idx file.  And if you have lots of RAM, eventually
-the midx lookup table (at least) will end up cached in memory, so only a
-single page should be needed for each lookup.
+Like an idx file, a midx file has a lookup table at the beginning to narrow
+down the initial search, and the rest of the data is sorted for using a
+binary search. However, unlike an idx file (which has a fixed-size 256-entry
+lookup table), a midx file has a variably-sized table to make sure the entire
+binary search can be contained to a single page of the midx file. Basically,
+the lookup table says which page to load, and then a binary search can be
+performed inside that page. a typical search thus only requires the kernel
+to swap in two pages, which is better than results with even a single large
+idx file, and if there is a lot of working memory, then eventually the midx
+lookup table (at least) ends up cached in memory, so only a single page
+should be needed for each lookup.
 
-The midx files are generated with 'bup midx'.  The downside of midx files is that
-generating one takes a while, and it must be regenerated every time a few packs
-are added.
+The midx files are generated with 'bup midx'.  The downside of a midx file is
+that generating one takes a while, and it must be regenerated every time a few
+packs are added.
 
 UPDATE: Brandon Low contributed an implementation of "bloom filters", which
 have even better characteristics than midx for certain uses.  Look it up in
